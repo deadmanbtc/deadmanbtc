@@ -63,4 +63,4 @@ app.sendData = async function(ins, data) {
 
 }
 
-app.sendData(0x02, "hello");
+//app.sendData(0x02, "hello");

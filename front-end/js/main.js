@@ -18,6 +18,18 @@ function registerLedger() {
     });
 }
 
+function checkLedger(){
+    $.ajax({
+        url: 'http://localhost:3000/check',
+        type: 'GET',
+        contentType: 'application/json',
+        success: function(data){
+            console.log(data);
+        }
+    });
+
+}
+
 
 
 $(document).ready(function() {
@@ -34,6 +46,10 @@ $(document).ready(function() {
 
     document.getElementById("submit-register-buttom").onclick = function(){
         registerLedger();
+    };
+
+    document.getElementById("check-buttom").onclick = function(){
+        checkLedger();
     };
 
     document.getElementById("go-back-buttom").onclick = function(){
