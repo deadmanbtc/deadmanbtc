@@ -1,12 +1,11 @@
 const TransportNodeHid = require("@ledgerhq/hw-transport-node-hid");
 const express = require("express");
+var request = require('sync-request');
 const cors = require('cors');
 const bodyParser = require("body-parser");
 const routes = require("./routes/routes.js");
 const app = express();
 app.use(cors({origin: '*'}));
-
-const request = require('request');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -15,17 +14,25 @@ routes(app);
 
 const server = app.listen(3000, function() {
     console.log("app running on port.", server.address().port);
+
+    app.check();
 });
 
+app.check = function(){
 
-app.getBlock = function (blockNo) {
-    request('https://blockchain.info/rawblock/' + blockNo, { json: true }, (err, res, body) => {
-        if (err) { return console.log(err); }
-        console.log(body);
-    });
+    var startResp = "1468049" //TODO StartLedgerCheck();
+
+    var test = getBlock(1468049);
+    console.log(test);
+
+    //TODO
 };
 
-
+function getBlock(blockIndex){
+    
+    var resp = request('GET', 'https://blockchain.info/rawblock/' + blockIndex + '?format=hex');
+    return resp.getBody('utf8');    
+}
 
 app.registerOnLedger = function (publickey, timeperiod, currenthash, password) {
 
