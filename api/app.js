@@ -1,49 +1,184 @@
 const TransportNodeHid = require("@ledgerhq/hw-transport-node-hid");
 const express = require("express");
-var request = require('sync-request');
+const request = require('sync-request');
 const cors = require('cors');
 const bodyParser = require("body-parser");
 const routes = require("./routes/routes.js");
 const app = express();
-app.use(cors({origin: '*'}));
 
+app.use(cors({origin: '*'}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 routes(app);
 
-function getBlockjson(blockIndex){
-    var resp = request('GET', 'https://blockchain.info/rawblock/' + blockIndex + '?format=json');
+function getBlockJson(blockIndex){
+    let resp = request('GET', 'https://blockchain.info/rawblock/' + blockIndex + '?format=json');
     return JSON.parse(resp.getBody('utf8'));
-};
+}
 
-function getBlock(blockIndex){
-    var resp = request('GET', 'https://blockchain.info/rawblock/' + blockIndex + '?format=hex');
+function getBlockHex(blockIndex){
+    let resp = request('GET', 'https://blockchain.info/rawblock/' + blockIndex + '?format=hex');
     return resp.getBody('utf8');
-};
+}
 
 
 const server = app.listen(3000, function() {
     console.log("app running on port.", server.address().port);
 });
 
-//4
-function sendtxledger(hexblock, jsonblock)
-{
-    //var trxhash =
-    //read for tx
-    for(var i = 0; i < jsonblock.tx.length;i++)
-    {
-        console.log(jsonblock.tx[i].size);
-    }
 
-}
+//1
+app.registerOnLedger = async function (publickey, timeperiod, currenthash, password) {
 
+    let data = Buffer.concat([
+        Buffer.from(publickey),
+        Buffer.from(timeperiod),
+        Buffer.from(currenthash),
+        Buffer.from(password)
+    ]);
+
+    return new Promise(function(resolve, reject){
+        app.sendData(0x01, data)
+            .then(res => {
+                console.log(res);
+                console.log("registered.");
+                resolve(res);
+            })
+            .catch(err => {
+                //TODO
+                console.error("error on register. " + err);
+                reject(err);
+            });
+    });
+};
+
+
+//2
+app.checkOnLedger =  async function () {
+    return new Promise(function(resolve, reject){
+        app.sendData(0x02, Buffer.alloc(0))
+            .then(res => {
+                //get the initial hash block
+                resolve(res);
+                console.log("initial hashblock: " + res);
+                console.log("checked.");
+            })
+            .catch(err => {
+                //TODO unexpected error
+                reject();
+                console.log("error on check.");
+            });
+    });
+};
 
 //3
-function sendheadblockledger(hexblock, jsonblock)
+app.streamBlock = async function(blockJson, blockHex){
+
+    let headHex  = blockHex.substring(0,159);
+    let txNumber = getTxNumber(blockHex);
+
+    let data = Buffer.concat([
+        Buffer.from(headHex),
+        Buffer.from(txNumber)
+    ]);
+
+    return new Promise(function (resolve, reject) {
+        //send header to ledger
+        app.sendData(0x03, data)
+            .then(result => {
+                resolve(result);
+            })
+            .catch(err => {
+                reject(err);
+            });
+    });
+};
+
+//4
+app.streamTx = async function(blockJson, blockHex){
+    //TODO
+    //p1 == 1 => last, p1 == 0 => more
+    //p2 == 1 => segwit, p2 == 0 => notSegwit
+
+    //reuse stuff from sendData2
+};
+
+//5
+app.merkleRootVerification = function(){
+    //TODO
+};
+
+
+//for each block
+app.checkBlock = async function(block){
+
+    if(block === undefined){
+        return new Promise(function (resolve, reject) {
+            resolve("notDead");
+        });
+    }
+
+    let blockHex = getBlockHex(blockJson.block_index);
+
+    await app.streamBlock(block, blockHex).catch(password => {
+        resolve(password);
+    });
+    await app.streamTx(block, blockHex).catch(password => {
+        resolve(password);
+    });
+    await app.merkleRootVerification().catch(password => {
+        resolve(password);
+    });
+
+    blockIndex = block.block_index ++;
+    block = getBlockHex(blockIndex);
+
+    return new Promise(function (resolve, reject) {
+        return app.checkBlock(block)
+            .then(result => {
+                resolve(result);
+            })
+            .catch(err => {
+                reject(err);
+            });
+    });
+
+};
+
+app.check = async function(){
+
+    app.checkOnLedger()
+        .then(blockHash => {
+            let blockJson = getBlockJson(blockHash);
+
+            app.checkBlock(blockJson)
+                .then(result => {
+                    return new Promise(function (resolve, reject) {
+                        if(result !== "notDead") {
+                            resolve(result);
+                        } else {
+                            reject(result)
+                        }
+                    });
+                })
+                .catch( err => {
+                    return new Promise(function (resolve, reject) {
+                        reject(err);
+                    });
+                });
+        })
+        .catch(err => {
+            return new Promise(function (resolve, reject) {
+                reject(err);
+            });
+        });
+};
+
+
+//get variable integer tx number
+function getTxNumber(hexblock)
 {
-    var headhex  = hexblock.substring(0,159);
     //interprete as a decimal - convert to decimal
     var ntx  = parseInt(hexblock.substring(160,162), 16);
     if(ntx > 252 && ntx < 65535)
@@ -69,143 +204,7 @@ function sendheadblockledger(hexblock, jsonblock)
     return ntx;
 }
 
-app.check = function(){
-
-    var startResp = "1468049" //TODO StartLedgerCheck();
-
-    var hashblock = getBlock(1468049);
-    var jsonblock = getBlockjson(1468049);
-
-    var codehx = sendheadblockledger(hashblock, jsonblock);
-    //sendtxledger(hashblock, jsonblock);
-
-    //console.log(jsonblock);
-    //TODO
-};
-
-function getBlock(blockIndex){
-
-    var resp = request('GET', 'https://blockchain.info/rawblock/' + blockIndex + '?format=hex');
-    return resp.getBody('utf8');
-}
-
-app.registerOnLedger = async function (publickey, timeperiod, currenthash, password) {
-
-    let data = Buffer.concat([
-        Buffer.from(publickey),
-        Buffer.from(timeperiod),
-        Buffer.from(currenthash),
-        Buffer.from(password)
-    ]);
-
-    return new Promise(function(resolve, reject){
-        app.sendData(0x01, data)
-            .then(res => {
-                console.log(res);
-                console.log("registered.");
-                resolve(res);
-            })
-            .catch(err => {
-                //TODO
-                console.error("error on register. " + err);
-                reject(err);
-            });
-    });
-
-};
-
-app.checkBlock = async function(block){
-
-    //for each block
-    if(block === undefined){
-        return new Promise(function (resolve, reject) {
-            resolve("notDead");
-        });
-    }
-
-    app.streamBlock(block).catch(password => {
-        resolve(password);
-    });
-    app.merkleRootVerification().catch(password => {
-        resolve(password);
-    });
-
-    blockIndex = block.block_index ++;
-    block = getBlock(blockIndex);
-
-    return new Promise(function (resolve, reject) {
-        return app.checkBlock(block)
-            .then(result => {
-                resolve(result);
-            })
-            .catch(err => {
-                reject(err);
-            });
-    });
-
-};
-
-app.check = async function(){
-    app.checkOnLedger()
-        .then(blockHash => {
-            let block = getBlock(blockHash);
-
-            app.checkBlock(block)
-                .then(result => {
-                    return new Promise(function (resolve, reject) {
-                        if(result !== "notDead") {
-                            resolve(result);
-                        } else {
-                            reject(result)
-                        }
-                    });
-                })
-                .catch( err => {
-                    return new Promise(function (resolve, reject) {
-                        reject(err);
-                    });
-                });
-        })
-        .catch(err => {
-            return new Promise(function (resolve, reject) {
-                reject(err);
-            });
-        });
-};
-
-
-app.checkOnLedger =  async function () {
-    return new Promise(function(resolve, reject){
-        app.sendData(0x02, Buffer.alloc(0))
-            .then(res => {
-                //get the initial hash block
-                resolve(res.data);
-                console.log("initial hashblock: " + res.data);
-                console.log("checked.")})
-            .catch(err => {
-                //TODO unexpected error
-                reject();
-                console.log("error on check.")});
-    });
-};
-
-app.streamBlock = function(block){
-    //getHead
-    //getTxNumber.getVariableInteger()
-    //let data = head + variableInteger
-    let data = Buffer.concat([
-        Buffer.from(head),
-        Buffer.from(variableInteger)
-    ]);
-
-    app.sendData(0x03, data)
-
-}
-
-app.merkleRootVerification = function(){
-    //TODO
-}
-
+//send generic data and instruction code to the ledger
 app.sendData = async function(ins, data) {
 
     const transport = await TransportNodeHid.default.create(5000);
@@ -227,7 +226,6 @@ app.sendData = async function(ins, data) {
     });
 
 };
-
 
 app.sendData2 = async function(ins, data) {
 
