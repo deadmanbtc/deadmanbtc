@@ -24,15 +24,46 @@ body {
     height: 100%;
 }
 
-.register-tab, .register-tab-mobile {
+.register-tab-mobile, .register-tab, .check-tab, .check-tab-mobile {
     display: none;
+}
+
+.register-tab, .register-tab-mobile {
     margin-left: 10%;
     margin-right: 10%;
+    background-color: "red";
+}
+
+p, li {
+    font-family: 'Raleway', sans-serif;
+    font-size: 18px;
+    word-wrap: break-word;
+}
+
+h1 {
+    font-family: 'Raleway', sans-serif;
+    font-size: 300%;
+    font-weight: 700;
+    margin-bottom: 5%;
+    word-wrap: break-word;
+}
+
+h2 {
+    font-family: 'Raleway', sans-serif;
+    font-size: 200%;
+    font-weight: 700;
+    margin-bottom: 10%;
+    word-wrap: break-word;
+}
+
+.col-centered {
+    float: none;
+    margin: 0 auto;
 }
 
 
 @media (max-device-width: 480px) {
-    p {
+    p, li {
         font-family: 'Raleway', sans-serif;
         font-size: 13px;
         word-wrap: break-word;
@@ -70,6 +101,11 @@ body {
     .line {
         border-right: 0px ridge #14c962;
         border-bottom: 10px ridge #14c962;;
+    }
+
+    .register-tab-mobile {
+        margin-left: 0%;
+        margin-right: 0%;
     }
 }
 
