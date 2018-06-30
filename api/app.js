@@ -1,19 +1,19 @@
-var TransportNodeHid = require("@ledgerhq/hw-transport-node-hid");
-var express = require("express");
-var cors = require('cors');
-var bodyParser = require("body-parser");
-var routes = require("./routes/routes.js");
-var app = express();
+const TransportNodeHid = require("@ledgerhq/hw-transport-node-hid");
+const express = require("express");
+const cors = require('cors');
+const bodyParser = require("body-parser");
+const routes = require("./routes/routes.js");
+const app = express();
 app.use(cors({origin: '*'}));
 
-var request = require('request');
+const request = require('request');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 routes(app);
 
-var server = app.listen(3000, function() {
+const server = app.listen(3000, function() {
     console.log("app running on port.", server.address().port);
 });
 
@@ -23,17 +23,50 @@ app.getBlock = function (blockNo) {
         if (err) { return console.log(err); }
         console.log(body);
     });
+};
+
+
+
+app.registerOnLedger = function (publickey, timeperiod, currenthash, password) {
+
+    let data = Buffer.concat([
+        Buffer.from(publickey),
+        Buffer.from(timeperiod),
+        Buffer.from(currenthash),
+        Buffer.from(password)
+    ]);
+
+    app.sendData(0x01, data);
+};
+
+app.sendData = async function(ins, data) {
+
+    let cla = 0x80;
+    let p1 = 0x00;
+    let p2 = 0x00;
+
+    const transport = await TransportNodeHid.default.create(5000);
+    transport.setDebugMode(true);
+
+    await transport.send(cla, ins, p1, p2, data).then(response => {
+        //TODO do something with the response
+
+        console.log("response: " + JSON.stringify(response));
+    }).catch(reason => {
+        console.error(reason);
+    });
+
 }
 
 
-app.sendData = async function(ins, data) {
+app.sendData2 = async function(ins, data) {
 
     var cla = 0x80;
 
     data = Buffer.from(data, "utf8");
 
     var offset = 0;
-    var p1 = 0x80;
+    var p1 = 0x00;
     var p2 = 0x00;
     var chunk = "";
 
@@ -62,5 +95,4 @@ app.sendData = async function(ins, data) {
     // [0x154,1,180,0x12,0x15,....]
 
 }
-
 //app.sendData(0x02, "hello");
