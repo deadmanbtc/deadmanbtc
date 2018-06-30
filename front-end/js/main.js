@@ -10,12 +10,24 @@ function registerLedger() {
     console.log(datatest);
 
     $.ajax({
-        url: 'localhost:3000/register',
+        url: 'http://localhost:3000/register',
         type: 'POST',
         contentType:'application/json',
         data: datatest,
         dataType:'json'
     });
+}
+
+function checkLedger(){
+    $.ajax({
+        url: 'http://localhost:3000/check',
+        type: 'GET',
+        contentType: 'application/json',
+        success: function(data){
+            console.log(data);
+        }
+    });
+
 }
 
 
@@ -34,6 +46,10 @@ $(document).ready(function() {
 
     document.getElementById("submit-register-buttom").onclick = function(){
         registerLedger();
+    };
+
+    document.getElementById("check-buttom").onclick = function(){
+        checkLedger();
     };
 
     document.getElementById("go-back-buttom").onclick = function(){
