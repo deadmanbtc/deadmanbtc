@@ -11,10 +11,6 @@ var appRouter = function (app) {
       res.send(req.body.timeperiod);
       res.send(req.currenthash);
       res.send(req.password);
-
-      
-
-
     });
   }
   
