@@ -10,7 +10,7 @@ function registerLedger() {
     console.log(datatest);
 
     $.ajax({
-        url: 'localhost:3000/register',
+        url: 'http://localhost:3000/register',
         type: 'POST',
         contentType:'application/json',
         data: datatest,
