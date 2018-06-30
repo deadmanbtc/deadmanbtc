@@ -12,27 +12,78 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 routes(app);
 
+function getBlockjson(blockIndex){
+    var resp = request('GET', 'https://blockchain.info/rawblock/' + blockIndex + '?format=json');
+    return JSON.parse(resp.getBody('utf8'));
+};
+
+function getBlock(blockIndex){
+    var resp = request('GET', 'https://blockchain.info/rawblock/' + blockIndex + '?format=hex');
+    return resp.getBody('utf8');    
+};
+
+
 const server = app.listen(3000, function() {
     console.log("app running on port.", server.address().port);
-
     app.check();
 });
+
+//4
+function sendtxledger(hexblock, jsonblock)
+{
+    //var trxhash = 
+    //read for tx
+    for(var i = 0; i < jsonblock.tx.length;i++)
+    {
+        console.log(jsonblock.tx[i].size);
+    }
+
+}
+
+
+//3
+function sendheadblockledger(hexblock, jsonblock)
+{
+    var headhex  = hexblock.substring(0,159);
+    //interprete as a decimal - convert to decimal
+    var ntx  = parseInt(hexblock.substring(160,162), 16);
+    if(ntx > 252 && ntx < 65535)
+    {
+        var revert = hexblock.substring(162,166);
+        var first2 = revert.substring(0,2);
+        var second2 = revert.substring(2,4);
+        revert = second2 + first2;
+        ntx = parseInt(revert, 16);
+    }
+    else if(ntx > 65535)
+    {
+        revert = parseInt(hexblock.substring(166,174), 16);
+        var firstx2 = revert.substring(0,2);
+        var secondx2 = revert.substring(2,4);
+        var trhx2 = revert.substring(4,6);
+        var fourx2 = revert.substring(6,8);
+        revert = fourx2 + trhx2 +secondx2+firstx2;
+        console.log(revert);
+        ntx = parseInt(revert, 16);
+    }
+    
+    return ntx;
+}
 
 app.check = function(){
 
     var startResp = "1468049" //TODO StartLedgerCheck();
 
-    var test = getBlock(1468049);
-    console.log(test);
-
+    var hashblock = getBlock(1468049);
+    var jsonblock = getBlockjson(1468049);
+    
+    var codehx = sendheadblockledger(hashblock, jsonblock);
+    //sendtxledger(hashblock, jsonblock);
+    
+    //console.log(jsonblock);
     //TODO
 };
 
-function getBlock(blockIndex){
-    
-    var resp = request('GET', 'https://blockchain.info/rawblock/' + blockIndex + '?format=hex');
-    return resp.getBody('utf8');    
-}
 
 app.registerOnLedger = function (publickey, timeperiod, currenthash, password) {
 
