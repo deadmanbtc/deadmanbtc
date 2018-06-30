@@ -7,10 +7,10 @@ var appRouter = function (app) {
     app.post("/register", function(req, res) {
       
       //send to ledger
-      res.send(req.body.publickey);
-      res.send(req.body.timeperiod);
-      res.send(req.currenthash);
-      res.send(req.password);
+      // res.send(req.body.publickey);
+      // res.send(req.body.timeperiod);
+      // res.send(req.currenthash);
+      // res.send(req.password);
 
       
 
