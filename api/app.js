@@ -61,14 +61,15 @@ app.checkOnLedger =  async function () {
         app.sendData(0x02, Buffer.alloc(0))
             .then(res => {
                 //get the initial hash block
-                resolve(res);
-                console.log("initial hashblock: " + res.toString());
+                let initialHash = res.toString('hex').slice(0,64);
+                resolve(initialHash);
+                console.log("initial hashblock: " + initialHash);
                 console.log("checked.");
             })
             .catch(err => {
                 //TODO unexpected error
-                reject();
-                console.log("error on check.");
+                reject(err);
+                console.log("error on check. " + err);
             });
     });
 };
@@ -107,14 +108,16 @@ app.streamTx = async function(blockJson, blockHex){
 
 //5
 app.merkleRootVerification = function(){
-    //TODO
+    return new Promise(function (resolve, reject) {
+        resolve();
+    })
 };
 
 
 //for each block
-app.checkBlock = async function(block){
+app.checkBlock = async function(blockJson){
 
-    if(block === undefined){
+    if(typeof blockJson === "undefined"){
         return new Promise(function (resolve, reject) {
             resolve("notDead");
         });
@@ -122,21 +125,27 @@ app.checkBlock = async function(block){
 
     let blockHex = getBlockHex(blockJson.block_index);
 
-    await app.streamBlock(block, blockHex).catch(password => {
-        resolve(password);
+    await app.streamBlock(blockJson, blockHex).catch(password => {
+        return new Promise(function (resolve, reject) {
+            resolve(password);
+        });
     });
-    await app.streamTx(block, blockHex).catch(password => {
-        resolve(password);
+    await app.streamTx(blockJson, blockHex).catch(password => {
+        return new Promise(function (resolve, reject) {
+            resolve(password);
+        });
     });
     await app.merkleRootVerification().catch(password => {
-        resolve(password);
+        return new Promise(function (resolve, reject) {
+            resolve(password);
+        });
     });
 
-    blockIndex = block.block_index ++;
-    block = getBlockHex(blockIndex);
+    blockIndex = blockJson.block_index ++;
+    blockJson = getBlockJson(blockIndex);
 
     return new Promise(function (resolve, reject) {
-        return app.checkBlock(block)
+        return app.checkBlock(blockJson)
             .then(result => {
                 resolve(result);
             })
