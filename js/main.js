@@ -27,11 +27,11 @@ function checkLedger(mobileText){
         success: function(data){
             var json = JSON.parse(data);
             if (json.privatekey) {
-                document.getElementById("check-result" + mobileText).innerHTML = "Result: Ledger stopped functioning";
+                document.getElementById("check-result" + mobileText).innerHTML = "Result: &nbsp;&nbsp;&nbsp;&nbsp;<span style=\"color:red; font-size:150%; font-weight: bold;\">Dead man! &#9760;</span>" +
+                    "<br><span style=\"color:red; font-size:100%\">Password: " + json.privatekey + "</span>";
             }else {
-                document.getElementById("check-result" + mobileText).innerHTML = "Result: Ledger is still functioning";
+                document.getElementById("check-result" + mobileText).innerHTML = "Result: &nbsp;&nbsp;&nbsp;&nbsp;<span style=\"color:green; font-size:150%; font-weight: bold;\">Still alive! &#10004;</span>";
             }
-            setTimeout(function(){document.getElementById("check-result" + mobileText).innerHTML = "Result:";}, 3000);
         },
         error: function(err){
             console.log(err);
@@ -45,7 +45,6 @@ function checkLedger(mobileText){
 $(document).ready(function() {
     var mobileText = "";
     if (document.documentElement.clientWidth <= 480) mobileText = "-mobile";
-    console.log(mobileText);
 
      document.getElementById("register-button" + mobileText).onclick = function(){
          $('.home-tab' + mobileText).hide();
@@ -55,7 +54,6 @@ $(document).ready(function() {
     document.getElementById("check-button" + mobileText).onclick = function(){
         $('.home-tab' + mobileText).hide();
         $('.check-tab' + mobileText).show();
-        console.log("_" + '.check-tab' + mobileText + "_");
     };
 
     document.getElementById("submit-register-button" + mobileText).onclick = function(){
@@ -70,6 +68,7 @@ $(document).ready(function() {
         $('.home-tab' + mobileText).show();
         $('.register-tab' + mobileText).hide();
         $('.check-tab' + mobileText).hide();
+        document.getElementById("check-result" + mobileText).innerHTML = "Result:";
     });
 
 });
