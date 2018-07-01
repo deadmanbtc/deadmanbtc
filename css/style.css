@@ -1,0 +1,128 @@
+body,html, .container{
+    height:100%;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.vertical-align-middle {
+    height: 25%;
+}
+
+.vertical-align-quarter {
+    height: 13%;
+}
+
+body {
+    background-color: #f6f6f6;
+}
+
+.line {
+    border-right: 17px ridge #14c962;
+}
+
+.as-parent {
+    height: 100%;
+}
+
+.register-tab-mobile, .register-tab, .check-tab, .check-tab-mobile {
+    display: none;
+}
+
+.register-tab, .register-tab-mobile {
+    margin-left: 10%;
+    margin-right: 10%;
+    background-color: "red";
+}
+
+p, li {
+    font-family: 'Raleway', sans-serif;
+    font-size: 18px;
+    word-wrap: break-word;
+}
+
+h1 {
+    font-family: 'Raleway', sans-serif;
+    font-size: 300%;
+    font-weight: 700;
+    margin-bottom: 5%;
+    word-wrap: break-word;
+}
+
+h2 {
+    font-family: 'Raleway', sans-serif;
+    font-size: 200%;
+    font-weight: 700;
+    margin-bottom: 10%;
+    word-wrap: break-word;
+}
+
+.col-centered {
+    float: none;
+    margin: 0 auto;
+}
+
+
+@media (max-device-width: 480px) {
+    p, li {
+        font-family: 'Raleway', sans-serif;
+        font-size: 13px;
+        word-wrap: break-word;
+    }
+
+    h1 {
+        font-family: 'Raleway', sans-serif;
+        font-size: 180%;
+        font-weight: 700;
+        margin-bottom: 5%;
+        word-wrap: break-word;
+    }
+
+    h2 {
+        font-family: 'Raleway', sans-serif;
+        font-size: 100%;
+        font-weight: 700;
+        margin-bottom: 10%;
+        word-wrap: break-word;
+    }
+
+    .vertical-align-quarter, .vertical-align-middle{
+        height: 5%;
+    }
+
+    .left-side-pannel, .right-side-pannel {
+        padding-bottom: 50px;
+    }
+
+    .vertical-align-middle {
+        height: 5%;
+        margin-bottom: 5%;
+    }
+
+    .line {
+        border-right: 0px ridge #14c962;
+        border-bottom: 10px ridge #14c962;;
+    }
+
+    .register-tab-mobile {
+        margin-left: 0%;
+        margin-right: 0%;
+    }
+}
+
+@media only screen and (max-device-width: 480px) {
+    .show-mobile {
+        display: block;
+    }
+    .hide-mobile {
+        display: none;
+    }
+}
+
+@media only screen and (min-device-width: 481px) {
+    .show-mobile {
+        display: none;
+    }
+    .hide-mobile {
+        display: block;
+    }
+}
