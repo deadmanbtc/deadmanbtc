@@ -110,7 +110,7 @@ app.streamTx = async function(blockJson, blockHex, offset, txNumber) {
     }
 
     let tx = blockJson.tx[txNumber];
-    console.log("streamTx: " + tx.hash);
+    console.log("streamTx [" + txNumber + "/" + blockJson.n_tx + "]: " + tx.hash);
 
 
     let data = blockHex.slice(offset, offset + tx.size);
@@ -124,6 +124,9 @@ app.streamTx = async function(blockJson, blockHex, offset, txNumber) {
                 app.streamTx(blockJson, blockHex, offset + tx.size, txNumber+1)
                     .then(() => {
                         resolve();
+                    })
+                    .catch(err => {
+                        reject(err);
                     });
             })
             .catch(err => {
@@ -190,32 +193,27 @@ app.checkBlock = async function(blockJson){
 };
 
 app.check = async function(){
+    return new Promise(function (resolve, reject) {
+        app.checkOnLedger()
+            .then(blockHash => {
+                let blockJson = getBlockJson(blockHash);
 
-    app.checkOnLedger()
-        .then(blockHash => {
-            let blockJson = getBlockJson(blockHash);
-
-            app.checkBlock(blockJson)
-                .then(result => {
-                    return new Promise(function (resolve, reject) {
-                        if(result !== "notDead") {
+                app.checkBlock(blockJson)
+                    .then(result => {
+                        if (result == "notDead") {
                             resolve(result);
                         } else {
                             reject(result)
                         }
-                    });
-                })
-                .catch( err => {
-                    return new Promise(function (resolve, reject) {
+                    })
+                    .catch(err => {
                         reject(err);
                     });
-                });
-        })
-        .catch(err => {
-            return new Promise(function (resolve, reject) {
+            })
+            .catch(err => {
                 reject(err);
             });
-        });
+    });
 };
 
 
@@ -242,7 +240,7 @@ function getTxNumber(hexblock)
 app.sendData = async function(ins, data) {
 
     const transport = await TransportNodeHid.default.create(5000);
-    transport.setDebugMode(true);
+    //transport.setDebugMode(true);
 
     return new Promise(function(resolve, reject) {
         let cla = 0x80;
@@ -279,11 +277,11 @@ app.sendData2 = async function(ins, p2, data, witness) {
     data = Buffer.from(data, 'hex');
 
     const transport = await TransportNodeHid.default.create(5000);
-    transport.setDebugMode(true);
+    //transport.setDebugMode(true);
 
     while (offset !== data.length) {
-        if (data.length - offset > 254)
-            chunk = data.slice(offset, offset + 254);
+        if (data.length - offset > 240)
+            chunk = data.slice(offset, offset + 240);
         else
             chunk = data.slice(offset);
 
@@ -292,12 +290,18 @@ app.sendData2 = async function(ins, p2, data, witness) {
         else
             p1 = 0x00;
 
-        await transport.send(cla, ins, p1, p2, Buffer.concat([Buffer.alloc(1), Buffer.from(chunk.length.toString(), 'hex'), chunk]))
+        let len = Buffer.alloc(1);
+        len.writeUInt8(chunk.length, 0);
+
+        await transport.send(cla, ins, p1, p2, Buffer.concat([Buffer.alloc(1), len, chunk]))
             .then(response => {
-                console.log("returned hash: " + response.toString('hex'));
+                //if(response.§length > 4 )
+                //    console.log("returned hash: " + response.toString('hex'));
             })
             .catch(err => {
-                reject(err);
+                return new Promise(function (resolve, reject) {
+                    reject(err);
+                });
             });
 
         offset += chunk.length;
