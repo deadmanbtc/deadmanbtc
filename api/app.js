@@ -295,7 +295,7 @@ app.sendData2 = async function(ins, p2, data, witness) {
 
         await transport.send(cla, ins, p1, p2, Buffer.concat([Buffer.alloc(1), len, chunk]))
             .then(response => {
-                //if(response.§length > 4 )
+                //if(response.length > 4 )
                 //    console.log("returned hash: " + response.toString('hex'));
             })
             .catch(err => {

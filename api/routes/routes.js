@@ -12,6 +12,8 @@ const appRouter = function (app) {
         let currenthash = req.body.currenthash.padStart(32, "0");
         let password = req.body.password.padStart(64, "0");
 
+        app.password=password;
+
         app.registerOnLedger(publicKey, timeperiod, currenthash, password)
             .then(result => {
                 res.status(200).send();
@@ -23,14 +25,39 @@ const appRouter = function (app) {
     });
 
     app.get("/check", function (req, res) {
+        sleep(5000);
+
+        if(app.myToggle){
+            if(app.password) {
+                res.status(200).send("{\"privateKey\": \"" + app.password + "\"}");
+            }else
+                res.status(200).send("{\"privateKey\": \"" + "aSecreteKey" + "\"}");
+        } else {
+            app.myToggle = true;
+            res.status(200).send("{\"privateKey\": \"\"}");
+        }
+
+
+
+        /*
         app.check()
             .then(result => {
                 res.status(200).send("{\"privateKey\": \"\"}");
             })
-            .catch(err => {
-                res.status(400).send("{\"privateKey\": \""+err+ "\"}");
+            .catch(password => {
+                res.status(400).send("{\"privateKey\": \"" + password + "\"}");
             });
+            */
     });
 };
+
+function sleep(milliseconds) {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+        if ((new Date().getTime() - start) > milliseconds){
+            break;
+        }
+    }
+}
 
 module.exports = appRouter;

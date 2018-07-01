@@ -26,9 +26,9 @@ function checkLedger(mobileText){
         contentType: 'application/json',
         success: function(data){
             var json = JSON.parse(data);
-            if (json.privatekey) {
+            if (json.privateKey) {
                 document.getElementById("check-result" + mobileText).innerHTML = "Result: &nbsp;&nbsp;&nbsp;&nbsp;<span style=\"color:red; font-size:150%; font-weight: bold;\">Dead man! &#9760;</span>" +
-                    "<br><span style=\"color:red; font-size:100%\">Password: " + json.privatekey + "</span>";
+                    "<br><span style=\"color:red; font-size:100%\">Secret: " + json.privateKey.replace(/^0+/, '') + "</span>";
             }else {
                 document.getElementById("check-result" + mobileText).innerHTML = "Result: &nbsp;&nbsp;&nbsp;&nbsp;<span style=\"color:green; font-size:150%; font-weight: bold;\">Still alive! &#10004;</span>";
             }

@@ -73,21 +73,21 @@
                     <div class="form-group">
                           <label class="control-label" for="public-key-input">Pubkey:</label>
                           <div>
-                              <input type="text" class="form-control" id="public-key-input" placeholder="e.g.: 02a1633cafcc01ebfb6d78e39f687a1f0995c62fc95f51ead10a02ee0be551b5dc">
+                              <input type="text" class="form-control" id="public-key-input" value="02a1633cafcc01ebfb6d78e39f687a1f0995c62fc95f51ead10a02ee0be551b5dc" placeholder="e.g.: 02a1633cafcc01ebfb6d78e39f687a1f0995c62fc95f51ead10a02ee0be551b5dc">
                           </div>
                           <p>The bitcoin public key that will identify the transactions that "keep you alive".</p>
                     </div>
                     <div class="form-group">
                           <label class="control-label" for="period-input">Time period (in seconds):</label>
                           <div>
-                              <input type="number" class="form-control" id="period-input" placeholder="e.g.: 1296000 (= 30 days)">
+                              <input type="number" class="form-control" id="period-input" value="1296000" placeholder="e.g.: 1296000 (= 30 days)">
                           </div>
                           <p>The maximum amount of time (in seconds) that can pass between two consecutive transactions before the switch is activated, therefore enabling disclosure of your secret password to trusted keepers.</p>
                     </div>
                     <div class="form-group">
                           <label class="control-label" for="current-block-hash-input">Current hash block:</label>
                           <div>
-                              <input type="text" class="form-control" id="current-block-hash-input" placeholder="e.g.: 0000000000000000002bbbd03563aad9d6ea69438edec334a1394705d71c247e">
+                              <input type="text" class="form-control" id="current-block-hash-input" value="0000000000000000002bbbd03563aad9d6ea69438edec334a1394705d71c247e" placeholder="e.g.: 0000000000000000002bbbd03563aad9d6ea69438edec334a1394705d71c247e">
                           </div>
                           <p>The hash of the block that contains your first transaction (to minimize the possibility of that block becoming orphan, wait for five confirmations).</p>
                     </div>
