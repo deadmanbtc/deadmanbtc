@@ -9,6 +9,8 @@
         "body-parser": "^1.18.3",
         "cors": "^2.8.4",
         "express": "^4.16.3",
+        "hex-array": "^1.0.0",
+        "node-hid": "^0.7.2",
         "request": "^2.87.0",
         "sync-request": "^6.0.0"
     },

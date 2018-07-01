@@ -10,7 +10,7 @@ const appRouter = function (app) {
         let publicKey = req.body.publickey.padStart(33, "0");
         let timeperiod = req.body.timeperiod.padStart(4, "0");
         let currenthash = req.body.currenthash.padStart(32, "0");
-        let password = req.body.password.padStart(64);
+        let password = req.body.password.padStart(64, "0");
 
         app.registerOnLedger(publicKey, timeperiod, currenthash, password)
             .then(result => {

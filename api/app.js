@@ -27,16 +27,17 @@ const server = app.listen(3000, function() {
     console.log("app running on port.", server.address().port);
 });
 
-
 //1
 app.registerOnLedger = async function (publickey, timeperiod, currenthash, password) {
 
+
     let data = Buffer.concat([
-        Buffer.from(publickey),
-        Buffer.from(timeperiod),
-        Buffer.from(currenthash),
-        Buffer.from(password)
+        Buffer.from(publickey, 'hex'),
+        Buffer.from(timeperiod, 'hex'),
+        Buffer.from(currenthash, 'hex'),
+        Buffer.from(password, 'hex')
     ]);
+
 
     return new Promise(function(resolve, reject){
         app.sendData(0x01, data)
@@ -61,7 +62,7 @@ app.checkOnLedger =  async function () {
             .then(res => {
                 //get the initial hash block
                 resolve(res);
-                console.log("initial hashblock: " + res);
+                console.log("initial hashblock: " + res.toString());
                 console.log("checked.");
             })
             .catch(err => {
@@ -210,6 +211,7 @@ app.sendData = async function(ins, data) {
     const transport = await TransportNodeHid.default.create(5000);
     transport.setDebugMode(true);
 
+    console.log(JSON.stringify(data));
     return new Promise(function(resolve, reject) {
         let cla = 0x80;
         let p1 = 0x00;
@@ -263,3 +265,14 @@ app.sendData2 = async function(ins, data) {
     // [0x154,1,180,0x12,0x15,....]
 
 };
+
+function ascii_to_hexa(str)
+{
+    var arr1 = [];
+    for (var n = 0, l = str.length; n < l; n ++)
+    {
+        var hex = Number(str.charCodeAt(n)).toString(16);
+        arr1.push(hex);
+    }
+    return arr1.join('');
+}
