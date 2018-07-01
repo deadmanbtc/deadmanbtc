@@ -151,19 +151,19 @@ app.checkBlock = async function(blockJson){
 
     let blockHex = getBlockHex(blockJson.block_index);
 
-    app.streamBlock(blockJson, blockHex).catch(password => {
+    await app.streamBlock(blockJson, blockHex).catch(password => {
         return new Promise(function (resolve, reject) {
             resolve(password);
         });
     })
-        .then(() => {
-            app.streamTx(blockJson, blockHex, 160, 0).catch(password => {
+        .then(async () => {
+            await app.streamTx(blockJson, blockHex, 160, 0).catch(password => {
                 return new Promise(function (resolve, reject) {
                     resolve(password);
                 });
             })
-                .then(() => {
-                    app.merkleRootVerification().catch(password => {
+                .then(async () => {
+                    await app.merkleRootVerification().catch(password => {
                         return new Promise(function (resolve, reject) {
                             resolve(password);
                         });
@@ -251,7 +251,6 @@ app.sendData = async function(ins, data) {
     const transport = await TransportNodeHid.default.create(5000);
     transport.setDebugMode(true);
 
-    console.log(JSON.stringify(data));
     return new Promise(function(resolve, reject) {
         let cla = 0x80;
         let p1 = 0x00;
@@ -280,43 +279,35 @@ app.sendData2 = async function(ins, p2, data, witness) {
     if(p2){
         data = data.substr(0,8) + data.substr(12);
         data = data.replace(witness, '');
-    }
-    data = Buffer.from(data);
-/*
+        p2 = 0x80;
+    } else
+        p2 = 0x00;
+
+    data = Buffer.from(data, 'hex');
+
     const transport = await TransportNodeHid.default.create(5000);
     transport.setDebugMode(true);
 
     while (offset !== data.length) {
-        if (data.length - offset > 255)
-            chunk = data.slice(offset, offset + 255);
+        if (data.length - offset > 254)
+            chunk = data.slice(offset, offset + 254);
         else
             chunk = data.slice(offset);
 
         if (offset + chunk.length === data.length)
-            p1 = 0x01;
+            p1 = 0x80;
         else
             p1 = 0x00;
 
-        await transport.send(cla, ins, p1, p2, Buffer.concat([Buffer.from(chunk.length, 'hex'), chunk])).then(response => {
-
-            console.log("response: " + JSON.stringify(response));
+        await transport.send(cla, ins, p1, p2, Buffer.concat([Buffer.from(chunk.length.toString(), 'hex'), chunk])).then(response => {
+            console.log("returned hash: " + response.toString('hex'));
         });
 
         offset += chunk.length;
-    }*/
+    }
+    transport.close();
     return new Promise(function (resolve, reject) {
         resolve();
     })
 
 };
-
-function ascii_to_hexa(str)
-{
-    var arr1 = [];
-    for (var n = 0, l = str.length; n < l; n ++)
-    {
-        var hex = Number(str.charCodeAt(n)).toString(16);
-        arr1.push(hex);
-    }
-    return arr1.join('');
-}
