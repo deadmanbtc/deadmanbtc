@@ -76,16 +76,18 @@ app.checkOnLedger =  async function () {
 
 //3
 app.streamBlock = async function(blockJson, blockHex){
-
-    let headHex  = blockHex.substring(0,159);
-    let txNumber = getTxNumber(blockHex);
-
-    let data = Buffer.concat([
-        Buffer.from(headHex),
-        Buffer.from(txNumber)
-    ]);
+    console.log("streamBlock: " + blockJson.hash);
 
     return new Promise(function (resolve, reject) {
+
+        let headHex  = blockHex.substring(0,159);
+        let txNumber = getTxNumber(blockHex).toString();
+
+        let data = Buffer.concat([
+            Buffer.from(headHex, 'hex'),
+            Buffer.from(txNumber, 'hex')
+        ]);
+
         //send header to ledger
         app.sendData(0x03, data)
             .then(result => {
@@ -98,12 +100,36 @@ app.streamBlock = async function(blockJson, blockHex){
 };
 
 //4
-app.streamTx = async function(blockJson, blockHex){
-    //TODO
-    //p1 == 1 => last, p1 == 0 => more
-    //p2 == 1 => segwit, p2 == 0 => notSegwit
+app.streamTx = async function(blockJson, blockHex, offset, txNumber) {
 
-    //reuse stuff from sendData2
+
+    if (txNumber == blockJson.n_tx) {
+        return new Promise(function (resolve, reject) {
+            resolve();
+        })
+    }
+
+    let tx = blockJson.tx[txNumber];
+    console.log("streamTx: " + tx.hash);
+
+
+    let data = blockHex.slice(offset, offset + tx.size);
+    let witness = tx.inputs[0].witness;
+    let p2 = witness != "";
+
+
+    return new Promise(function (resolve, reject) {
+        app.sendData2(0x04, p2, data, witness)
+            .then(result => {
+                app.streamTx(blockJson, blockHex, offset + tx.size, txNumber+1)
+                    .then(() => {
+                        resolve();
+                    });
+            })
+            .catch(err => {
+                reject(err);
+            });
+    });
 };
 
 //5
@@ -125,35 +151,40 @@ app.checkBlock = async function(blockJson){
 
     let blockHex = getBlockHex(blockJson.block_index);
 
-    await app.streamBlock(blockJson, blockHex).catch(password => {
+    app.streamBlock(blockJson, blockHex).catch(password => {
         return new Promise(function (resolve, reject) {
             resolve(password);
         });
-    });
-    await app.streamTx(blockJson, blockHex).catch(password => {
-        return new Promise(function (resolve, reject) {
-            resolve(password);
-        });
-    });
-    await app.merkleRootVerification().catch(password => {
-        return new Promise(function (resolve, reject) {
-            resolve(password);
-        });
-    });
-
-    blockIndex = blockJson.block_index ++;
-    blockJson = getBlockJson(blockIndex);
-
-    return new Promise(function (resolve, reject) {
-        return app.checkBlock(blockJson)
-            .then(result => {
-                resolve(result);
+    })
+        .then(() => {
+            app.streamTx(blockJson, blockHex, 160, 0).catch(password => {
+                return new Promise(function (resolve, reject) {
+                    resolve(password);
+                });
             })
-            .catch(err => {
-                reject(err);
-            });
-    });
+                .then(() => {
+                    app.merkleRootVerification().catch(password => {
+                        return new Promise(function (resolve, reject) {
+                            resolve(password);
+                        });
+                    })
+                        .then(() => {
 
+                            blockIndex = blockJson.block_index ++;
+                            blockJson = getBlockJson(blockIndex);
+
+                            return new Promise(function (resolve, reject) {
+                                return app.checkBlock(blockJson)
+                                    .then(result => {
+                                        resolve(result);
+                                    })
+                                    .catch(err => {
+                                        reject(err);
+                                    });
+                            });
+                        });
+                });
+        });
 };
 
 app.check = async function(){
@@ -238,19 +269,22 @@ app.sendData = async function(ins, data) {
 
 };
 
-app.sendData2 = async function(ins, data) {
+app.sendData2 = async function(ins, p2, data, witness) {
 
     var cla = 0x80;
 
-    data = Buffer.from(data, "utf8");
-
     var offset = 0;
     var p1 = 0x00;
-    var p2 = 0x00;
     var chunk = "";
 
+    if(p2){
+        data = data.substr(0,8) + data.substr(12);
+        data = data.replace(witness, '');
+    }
+    data = Buffer.from(data);
+/*
     const transport = await TransportNodeHid.default.create(5000);
-    //transport.setDebugMode(true);
+    transport.setDebugMode(true);
 
     while (offset !== data.length) {
         if (data.length - offset > 255)
@@ -263,15 +297,16 @@ app.sendData2 = async function(ins, data) {
         else
             p1 = 0x00;
 
-        await transport.send(cla, ins, p1, p2, chunk).then(response => {
-            //TODO do something with the response
+        await transport.send(cla, ins, p1, p2, Buffer.concat([Buffer.from(chunk.length, 'hex'), chunk])).then(response => {
 
             console.log("response: " + JSON.stringify(response));
         });
 
         offset += chunk.length;
-    }
-    // [0x154,1,180,0x12,0x15,....]
+    }*/
+    return new Promise(function (resolve, reject) {
+        resolve();
+    })
 
 };
 
