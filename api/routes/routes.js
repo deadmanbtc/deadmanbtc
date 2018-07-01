@@ -25,10 +25,10 @@ const appRouter = function (app) {
     app.get("/check", function (req, res) {
         app.check()
             .then(result => {
-                res.status(200).send(result);
+                res.status(200).send("{privateKey: \"\"}");
             })
             .catch(err => {
-                res.status(400).send("Unexpected error: " + err);
+                res.status(400).send("{privateKey: \""+err+ "\"}");
             });
     });
 };

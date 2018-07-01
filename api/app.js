@@ -150,6 +150,8 @@ app.checkBlock = async function(blockJson){
     }
 
     let blockHex = getBlockHex(blockJson.block_index);
+    let txNumber = getTxNumber(blockHex).toString();
+
 
     await app.streamBlock(blockJson, blockHex).catch(password => {
         return new Promise(function (resolve, reject) {
@@ -157,7 +159,7 @@ app.checkBlock = async function(blockJson){
         });
     })
         .then(async () => {
-            await app.streamTx(blockJson, blockHex, 160, 0).catch(password => {
+            await app.streamTx(blockJson, blockHex, 160 + txNumber.length, 0).catch(password => {
                 return new Promise(function (resolve, reject) {
                     resolve(password);
                 });
@@ -220,29 +222,20 @@ app.check = async function(){
 //get variable integer tx number
 function getTxNumber(hexblock)
 {
+    let result = hexblock.substring(160,162);
+
     //interprete as a decimal - convert to decimal
     var ntx  = parseInt(hexblock.substring(160,162), 16);
-    if(ntx > 252 && ntx < 65535)
+    if(ntx == 0xFD)
     {
-        var revert = hexblock.substring(162,166);
-        var first2 = revert.substring(0,2);
-        var second2 = revert.substring(2,4);
-        revert = second2 + first2;
-        ntx = parseInt(revert, 16);
+        result = hexblock.substring(160,166);
     }
-    else if(ntx > 65535)
+    else if(ntx == 0xFE)
     {
-        revert = parseInt(hexblock.substring(166,174), 16);
-        var firstx2 = revert.substring(0,2);
-        var secondx2 = revert.substring(2,4);
-        var trhx2 = revert.substring(4,6);
-        var fourx2 = revert.substring(6,8);
-        revert = fourx2 + trhx2 +secondx2+firstx2;
-        console.log(revert);
-        ntx = parseInt(revert, 16);
+        result = hexblock.substring(160,170);
     }
 
-    return ntx;
+    return result;
 }
 
 //send generic data and instruction code to the ledger
@@ -256,7 +249,7 @@ app.sendData = async function(ins, data) {
         let p1 = 0x00;
         let p2 = 0x00;
 
-        transport.send(cla, ins, p1, p2, data).then(response => {
+        transport.send(cla, ins, p1, p2, Buffer.concat([Buffer.alloc(1),data])).then(response => {
             resolve(response);
         }).catch(err => {
             console.error(err);
@@ -299,9 +292,13 @@ app.sendData2 = async function(ins, p2, data, witness) {
         else
             p1 = 0x00;
 
-        await transport.send(cla, ins, p1, p2, Buffer.concat([Buffer.from(chunk.length.toString(), 'hex'), chunk])).then(response => {
-            console.log("returned hash: " + response.toString('hex'));
-        });
+        await transport.send(cla, ins, p1, p2, Buffer.concat([Buffer.alloc(1), Buffer.from(chunk.length.toString(), 'hex'), chunk]))
+            .then(response => {
+                console.log("returned hash: " + response.toString('hex'));
+            })
+            .catch(err => {
+                reject(err);
+            });
 
         offset += chunk.length;
     }
